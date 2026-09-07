@@ -29,13 +29,25 @@ You can also just open `index.html` directly in a browser.
 - **Frictionless delete**: removing a single item or clearing the whole log happens instantly
   — no confirmation popup — and shows a floating "Undo" toast for 6 seconds so a mis-tap is
   never permanent.
-- **Summary**: total foods logged, total calories, and total protein are shown at the top,
-  plus progress bars against the daily goals (1700 kcal / 130g protein).
-- **Daily reset**: the log is stored in `localStorage` keyed by the local calendar date
-  (`calorie-tracker-log-YYYY-MM-DD`). At midnight local time the key rolls over, so the log
-  automatically starts empty for the new day — no manual reset needed. If the app is left
-  open across midnight, it detects the date change and refreshes itself. A live countdown to
-  the next reset is shown in the header.
+- **Workouts**: log calories burned from exercise (activity name + calories) the same way as
+  food — add, edit, or delete, with the same instant/undo behavior. Calories burned are added
+  to the day's calorie budget (`1700 base + burned`), so the Calories progress bar reflects
+  what you've actually eaten against goal-plus-exercise, matching the "eat back your exercise
+  calories" model most calorie trackers use.
+- **Summary**: total foods logged, total calories, total protein, and total calories burned
+  are shown at the top, plus progress bars against the daily goals (1700 kcal + any workouts /
+  130g protein).
+- **Ask About Nutrition**: a text box to ask a food/nutrition question, answered by Claude.
+  This only works when the app is opened through the published Artifact link (it uses a
+  runtime capability only that hosting provides) — the plain files here, run locally or on
+  GitHub Pages, show the box disabled with an explanation instead. It's also Claude answering
+  from its own trained knowledge, not a live internet search — a static page can't make
+  arbitrary outbound requests, so there's no way for it to hit a real search engine.
+- **Daily reset**: the log and workouts are stored in `localStorage` keyed by the local
+  calendar date (`calorie-tracker-log-YYYY-MM-DD`, `calorie-tracker-workouts-YYYY-MM-DD`). At
+  midnight local time the key rolls over, so both start empty for the new day — no manual
+  reset needed. If the app is left open across midnight, it detects the date change and
+  refreshes itself. A live countdown to the next reset is shown in the header.
 
 ## Using it on iPhone
 

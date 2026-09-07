@@ -33,13 +33,13 @@
     return `${y}-${m}-${day}`;
   }
 
-  function storageKey() {
-    return `calorie-tracker-log-${todayKey()}`;
+  function storageKey(kind) {
+    return `calorie-tracker-${kind}-${todayKey()}`;
   }
 
-  function loadLog() {
+  function loadEntries(kind) {
     try {
-      const raw = localStorage.getItem(storageKey());
+      const raw = localStorage.getItem(storageKey(kind));
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
       return [];
@@ -47,12 +47,18 @@
   }
 
   function saveLog(entries) {
-    localStorage.setItem(storageKey(), JSON.stringify(entries));
+    localStorage.setItem(storageKey("log"), JSON.stringify(entries));
+  }
+
+  function saveWorkouts(entries) {
+    localStorage.setItem(storageKey("workouts"), JSON.stringify(entries));
   }
 
   let currentDayKey = todayKey();
-  let log = loadLog();
+  let log = loadEntries("log");
+  let workouts = loadEntries("workouts");
   let editingUid = null;
+  let editingWorkoutUid = null;
 
   function round1(n) {
     return Math.round(n * 10) / 10;
@@ -257,23 +263,128 @@
     return row;
   }
 
+  function renderWorkouts() {
+    const container = document.getElementById("workout-log-list");
+    container.innerHTML = "";
+
+    if (workouts.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.id = "workout-empty-state";
+      empty.textContent = "No workouts logged yet today.";
+      container.appendChild(empty);
+      return;
+    }
+
+    workouts.forEach((entry) => {
+      if (entry.uid === editingWorkoutUid) {
+        container.appendChild(buildWorkoutEditRow(entry));
+        return;
+      }
+
+      const row = document.createElement("div");
+      row.className = "log-item";
+      row.innerHTML = `
+        <div class="log-info">
+          <p class="log-name">${escapeHtml(entry.name)}</p>
+          <p class="log-meta"><span class="cal">−${entry.calories} kcal</span> · ${entry.time}</p>
+        </div>
+        <div class="log-item-actions">
+          <button class="edit-btn" aria-label="Edit ${escapeHtml(entry.name)}">✎</button>
+          <button class="remove-btn" aria-label="Remove ${escapeHtml(entry.name)}">×</button>
+        </div>
+      `;
+      row.querySelector(".edit-btn").addEventListener("click", () => {
+        editingWorkoutUid = entry.uid;
+        renderWorkouts();
+      });
+      row.querySelector(".remove-btn").addEventListener("click", () => {
+        removeWorkout(entry.uid);
+      });
+      container.appendChild(row);
+    });
+  }
+
+  function buildWorkoutEditRow(entry) {
+    const row = document.createElement("div");
+    row.className = "log-item-edit";
+    row.innerHTML = `
+      <input type="text" class="custom-input workout-edit-name" value="${escapeHtml(entry.name)}" placeholder="Activity">
+      <input type="number" class="custom-input workout-edit-calories" value="${entry.calories}" min="0" step="1" placeholder="Calories burned">
+      <div class="log-edit-actions">
+        <button class="log-edit-delete" type="button">Delete</button>
+        <div class="log-edit-actions-right">
+          <button class="log-edit-cancel" type="button">Cancel</button>
+          <button class="log-edit-save" type="button">Save</button>
+        </div>
+      </div>
+    `;
+
+    const cancelEdit = () => {
+      editingWorkoutUid = null;
+      renderWorkouts();
+    };
+
+    const saveEdit = () => {
+      const name = row.querySelector(".workout-edit-name").value.trim();
+      const calories = parseFloat(row.querySelector(".workout-edit-calories").value);
+
+      if (!name || isNaN(calories) || calories < 0) {
+        return;
+      }
+
+      updateWorkout(entry.uid, { name, calories: Math.round(calories) });
+    };
+
+    row.querySelector(".log-edit-delete").addEventListener("click", () => {
+      removeWorkout(entry.uid);
+    });
+    row.querySelector(".log-edit-cancel").addEventListener("click", cancelEdit);
+    row.querySelector(".log-edit-save").addEventListener("click", saveEdit);
+
+    row.querySelectorAll(".workout-edit-name, .workout-edit-calories").forEach((field) => {
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          saveEdit();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          cancelEdit();
+        }
+      });
+    });
+
+    return row;
+  }
+
   function renderSummary() {
     const totalCalories = log.reduce((sum, e) => sum + e.calories, 0);
     const totalProtein = round1(log.reduce((sum, e) => sum + e.protein, 0));
+    const totalBurned = workouts.reduce((sum, w) => sum + w.calories, 0);
+    const calorieBudget = GOAL_CALORIES + totalBurned;
 
     document.getElementById("stat-foods").textContent = log.length;
     document.getElementById("stat-calories").textContent = totalCalories;
     document.getElementById("stat-protein").textContent = `${totalProtein}g`;
+    document.getElementById("stat-burned").textContent = totalBurned;
 
     document.getElementById("cal-consumed").textContent = totalCalories;
-    document.getElementById("cal-goal").textContent = GOAL_CALORIES;
+    document.getElementById("cal-goal").textContent = calorieBudget;
     document.getElementById("protein-consumed").textContent = totalProtein;
     document.getElementById("protein-goal").textContent = GOAL_PROTEIN;
 
+    const burnedNote = document.getElementById("cal-burned-note");
+    if (totalBurned > 0) {
+      burnedNote.textContent = `${GOAL_CALORIES} base + ${totalBurned} burned`;
+      burnedNote.hidden = false;
+    } else {
+      burnedNote.hidden = true;
+    }
+
     const calBar = document.getElementById("cal-bar");
-    const calPct = Math.min(100, (totalCalories / GOAL_CALORIES) * 100);
+    const calPct = Math.min(100, (totalCalories / calorieBudget) * 100);
     calBar.style.width = `${calPct}%`;
-    calBar.classList.toggle("over", totalCalories > GOAL_CALORIES);
+    calBar.classList.toggle("over", totalCalories > calorieBudget);
 
     const proteinBar = document.getElementById("protein-bar");
     const proteinPct = Math.min(100, (totalProtein / GOAL_PROTEIN) * 100);
@@ -285,6 +396,7 @@
     renderDate();
     renderCountdown();
     renderLog();
+    renderWorkouts();
     renderSummary();
   }
 
@@ -349,6 +461,47 @@
     });
   }
 
+  // ---- Workout mutations ----
+  function addWorkout(base) {
+    const entry = {
+      uid: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: base.name,
+      calories: base.calories,
+      time: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
+    };
+    workouts.push(entry);
+    saveWorkouts(workouts);
+    renderWorkouts();
+    renderSummary();
+  }
+
+  function removeWorkout(uid) {
+    const index = workouts.findIndex((w) => w.uid === uid);
+    if (index === -1) return;
+    const [removed] = workouts.splice(index, 1);
+    if (editingWorkoutUid === uid) editingWorkoutUid = null;
+    saveWorkouts(workouts);
+    renderWorkouts();
+    renderSummary();
+
+    showUndoToast(`Removed ${removed.name}`, () => {
+      workouts.splice(index, 0, removed);
+      saveWorkouts(workouts);
+      renderWorkouts();
+      renderSummary();
+    });
+  }
+
+  function updateWorkout(uid, changes) {
+    const entry = workouts.find((w) => w.uid === uid);
+    if (!entry) return;
+    Object.assign(entry, changes);
+    saveWorkouts(workouts);
+    editingWorkoutUid = null;
+    renderWorkouts();
+    renderSummary();
+  }
+
   // ---- Undo toast ----
   let toastTimeoutId = null;
   let pendingUndo = null;
@@ -373,13 +526,34 @@
     const key = todayKey();
     if (key !== currentDayKey) {
       currentDayKey = key;
-      log = loadLog(); // fresh key -> empty array
+      log = loadEntries("log"); // fresh key -> empty array
+      workouts = loadEntries("workouts");
       editingUid = null;
+      editingWorkoutUid = null;
       hideToast();
       renderAll();
     } else {
       renderCountdown();
     }
+  }
+
+  function handleWorkoutFormSubmit(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("workout-name");
+    const caloriesInput = document.getElementById("workout-calories");
+
+    const name = nameInput.value.trim();
+    const calories = parseFloat(caloriesInput.value);
+
+    if (!name || isNaN(calories) || calories < 0) {
+      return;
+    }
+
+    addWorkout({ name, calories: Math.round(calories) });
+
+    nameInput.value = "";
+    caloriesInput.value = "";
+    nameInput.focus();
   }
 
   function handleCustomFoodSubmit(event) {
@@ -412,9 +586,77 @@
     nameInput.focus();
   }
 
+  // ---- Ask About Nutrition (only works when opened via the published app, not a plain static copy) ----
+  async function initAskFeature() {
+    const form = document.getElementById("ask-form");
+    const input = document.getElementById("ask-input");
+    const submitBtn = document.getElementById("ask-submit-btn");
+    const answerEl = document.getElementById("ask-answer");
+    const statusEl = document.getElementById("ask-status");
+    const subtitleEl = document.getElementById("ask-subtitle");
+
+    const disable = (message) => {
+      subtitleEl.textContent = message;
+      input.disabled = true;
+      submitBtn.disabled = true;
+    };
+
+    if (typeof window.claude === "undefined" || typeof window.claude.use !== "function") {
+      disable("Only available when opened from the published app link, not this local copy.");
+      return;
+    }
+
+    let sample;
+    try {
+      sample = await window.claude.use("sample");
+    } catch (e) {
+      sample = null;
+    }
+
+    if (!sample) {
+      disable("Ask-Claude isn't available in this view right now.");
+      return;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const question = input.value.trim();
+      if (!question) return;
+
+      submitBtn.disabled = true;
+      statusEl.hidden = false;
+      statusEl.textContent = "Thinking…";
+      answerEl.hidden = true;
+
+      try {
+        const result = await sample(
+          `You are a concise nutrition assistant inside a personal calorie-tracking app. Answer this food or nutrition question factually and briefly, in a few plain-text sentences with no markdown formatting: ${question}`,
+          {
+            modelTier: "quick",
+            onText: ({ text }) => {
+              answerEl.hidden = false;
+              answerEl.textContent = text;
+            },
+          }
+        );
+        answerEl.hidden = false;
+        answerEl.textContent = result.text;
+        statusEl.hidden = true;
+      } catch (err) {
+        statusEl.textContent =
+          err && err.code === "not_granted"
+            ? "Permission wasn't granted for this feature."
+            : "Something went wrong asking that — try again.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
   document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
+  document.getElementById("workout-form").addEventListener("submit", handleWorkoutFormSubmit);
   document.getElementById("toast-undo-btn").addEventListener("click", () => {
     if (pendingUndo) pendingUndo();
     hideToast();
@@ -422,6 +664,7 @@
   renderFixedFoods();
   renderScalableFoods();
   renderAll();
+  initAskFeature();
 
   setInterval(checkForDayRollover, 1000);
 })();

@@ -41,6 +41,10 @@
         <p class="stat-value" id="stat-protein">0g</p>
         <p class="stat-label">Protein</p>
       </div>
+      <div class="summary-stat">
+        <p class="stat-value" id="stat-burned">0</p>
+        <p class="stat-label">Burned</p>
+      </div>
     </div>
 
     <div class="progress-block">
@@ -49,6 +53,7 @@
         <span class="progress-numbers"><span id="cal-consumed">0</span> / <span id="cal-goal">1700</span> kcal</span>
       </div>
       <div class="bar"><div class="bar-fill" id="cal-bar"></div></div>
+      <p class="progress-note" id="cal-burned-note" hidden></p>
     </div>
 
     <div class="progress-block">
@@ -86,6 +91,19 @@
   </section>
 
   <section class="panel">
+    <h2 class="panel-title">Workouts</h2>
+    <p class="panel-subtitle">Log calories burned — added to today's budget</p>
+    <form class="custom-food-form" id="workout-form">
+      <input type="text" id="workout-name" class="custom-input" placeholder="Activity (e.g. Push day, Run)" required>
+      <input type="number" id="workout-calories" class="custom-input" placeholder="Calories burned" min="0" step="1" required>
+      <button type="submit" class="add-custom-btn">Add workout</button>
+    </form>
+    <div class="log-list" id="workout-log-list">
+      <p class="empty-state" id="workout-empty-state">No workouts logged yet today.</p>
+    </div>
+  </section>
+
+  <section class="panel">
     <div class="panel-header-row">
       <h2 class="panel-title">Today's Log</h2>
       <button class="text-btn" id="clear-log-btn">Clear</button>
@@ -93,6 +111,17 @@
     <div class="log-list" id="log-list">
       <p class="empty-state" id="empty-state">No food logged yet today.</p>
     </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Ask About Nutrition</h2>
+    <p class="panel-subtitle" id="ask-subtitle">Ask Claude a food or nutrition question — answered from its own knowledge, not a live web search.</p>
+    <form class="custom-food-form" id="ask-form">
+      <textarea id="ask-input" class="custom-input ask-textarea" rows="2" placeholder="e.g. How much protein is in 200g of salmon?" required></textarea>
+      <button type="submit" class="add-custom-btn" id="ask-submit-btn">Ask</button>
+    </form>
+    <p class="ask-status" id="ask-status" hidden></p>
+    <div class="ask-answer" id="ask-answer" hidden></div>
   </section>
 
 </div>
