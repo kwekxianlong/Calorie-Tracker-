@@ -54,6 +54,19 @@ There's no "Ask a nutrition question" box in this copy — that needs a live con
 Claude, which a static page can't have, so it only exists in the separately-published
 Artifact version, not in these files or the GitHub Pages site they build.
 
+## Motion
+
+Small, purposeful animation throughout, all skipped automatically if the device has "Reduce
+Motion" enabled:
+
+- The header, summary card, and each panel fade/slide in with a short stagger on page load.
+- Numbers (calorie/protein stats, log totals, the streak) count up to their new value instead
+  of snapping, whenever they change.
+- Adding a food or workout slides the new row in; removing one shrinks and fades it out before
+  it actually leaves the log (the data change itself waits for that to finish).
+- The undo toast slides/fades in and out instead of appearing and disappearing instantly.
+- Every button gives a small press-down scale on tap.
+
 ## Using it on iPhone
 
 The layout is edge-to-edge and sized for phone screens (tested at iPhone SE, iPhone 14, and

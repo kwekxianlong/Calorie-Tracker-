@@ -73,6 +73,8 @@
   let workouts = loadEntries("workouts");
   let editingUid = null;
   let editingWorkoutUid = null;
+  let lastAddedLogUid = null;
+  let lastAddedWorkoutUid = null;
 
   function round1(n) {
     return Math.round(n * 10) / 10;
@@ -82,6 +84,73 @@
     const div = document.createElement("div");
     div.textContent = String(str);
     return div.innerHTML;
+  }
+
+  // ---- Motion helpers ----
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function animateNumberText(el, targetValue, { decimals = 0, suffix = "" } = {}) {
+    if (!el) return;
+    const prevValue = parseFloat(el.textContent);
+    const start = isNaN(prevValue) ? targetValue : prevValue;
+
+    if (prefersReducedMotion() || start === targetValue) {
+      el.textContent = `${targetValue.toFixed(decimals)}${suffix}`;
+      return;
+    }
+
+    const duration = 350;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = start + (targetValue - start) * eased;
+      el.textContent = `${current.toFixed(decimals)}${suffix}`;
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = `${targetValue.toFixed(decimals)}${suffix}`;
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  function animateRemoval(rowEl, onDone) {
+    if (!rowEl || prefersReducedMotion()) {
+      onDone();
+      return;
+    }
+
+    const height = rowEl.getBoundingClientRect().height;
+    rowEl.style.maxHeight = `${height}px`;
+    rowEl.style.overflow = "hidden";
+    rowEl.style.transition =
+      "opacity 0.2s ease, transform 0.2s ease, max-height 0.22s ease 0.02s, padding 0.22s ease 0.02s, margin 0.22s ease 0.02s";
+    void rowEl.offsetHeight;
+    rowEl.style.opacity = "0";
+    rowEl.style.transform = "scale(0.97)";
+
+    requestAnimationFrame(() => {
+      rowEl.style.maxHeight = "0px";
+      rowEl.style.paddingTop = "0px";
+      rowEl.style.paddingBottom = "0px";
+      rowEl.style.marginTop = "0px";
+      rowEl.style.marginBottom = "0px";
+      rowEl.style.borderBottomColor = "transparent";
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      onDone();
+    };
+    rowEl.addEventListener("transitionend", finish, { once: true });
+    setTimeout(finish, 280);
   }
 
   // ---- Rendering ----
@@ -198,6 +267,7 @@
 
       const row = document.createElement("div");
       row.className = "log-item";
+      if (entry.uid === lastAddedLogUid) row.classList.add("item-enter");
       row.innerHTML = `
         <div class="log-info">
           <p class="log-name">${escapeHtml(entry.name)}</p>
@@ -213,10 +283,11 @@
         renderLog();
       });
       row.querySelector(".remove-btn").addEventListener("click", () => {
-        removeEntry(entry.uid);
+        animateRemoval(row, () => removeEntry(entry.uid));
       });
       container.appendChild(row);
     });
+    lastAddedLogUid = null;
   }
 
   function buildEditRow(entry) {
@@ -257,7 +328,7 @@
     };
 
     row.querySelector(".log-edit-delete").addEventListener("click", () => {
-      removeEntry(entry.uid);
+      animateRemoval(row, () => removeEntry(entry.uid));
     });
     row.querySelector(".log-edit-cancel").addEventListener("click", cancelEdit);
     row.querySelector(".log-edit-save").addEventListener("click", saveEdit);
@@ -298,6 +369,7 @@
 
       const row = document.createElement("div");
       row.className = "log-item";
+      if (entry.uid === lastAddedWorkoutUid) row.classList.add("item-enter");
       row.innerHTML = `
         <div class="log-info">
           <p class="log-name">${escapeHtml(entry.name)}</p>
@@ -313,10 +385,11 @@
         renderWorkouts();
       });
       row.querySelector(".remove-btn").addEventListener("click", () => {
-        removeWorkout(entry.uid);
+        animateRemoval(row, () => removeWorkout(entry.uid));
       });
       container.appendChild(row);
     });
+    lastAddedWorkoutUid = null;
   }
 
   function buildWorkoutEditRow(entry) {
@@ -351,7 +424,7 @@
     };
 
     row.querySelector(".log-edit-delete").addEventListener("click", () => {
-      removeWorkout(entry.uid);
+      animateRemoval(row, () => removeWorkout(entry.uid));
     });
     row.querySelector(".log-edit-cancel").addEventListener("click", cancelEdit);
     row.querySelector(".log-edit-save").addEventListener("click", saveEdit);
@@ -445,14 +518,14 @@
     const totalBurned = workouts.reduce((sum, w) => sum + w.calories, 0);
     const calorieBudget = GOAL_CALORIES + totalBurned;
 
-    document.getElementById("stat-foods").textContent = log.length;
-    document.getElementById("stat-calories").textContent = totalCalories;
-    document.getElementById("stat-protein").textContent = `${totalProtein}g`;
-    document.getElementById("stat-burned").textContent = totalBurned;
+    animateNumberText(document.getElementById("stat-foods"), log.length);
+    animateNumberText(document.getElementById("stat-calories"), totalCalories);
+    animateNumberText(document.getElementById("stat-protein"), totalProtein, { decimals: 1, suffix: "g" });
+    animateNumberText(document.getElementById("stat-burned"), totalBurned);
 
-    document.getElementById("cal-consumed").textContent = totalCalories;
-    document.getElementById("cal-goal").textContent = calorieBudget;
-    document.getElementById("protein-consumed").textContent = totalProtein;
+    animateNumberText(document.getElementById("cal-consumed"), totalCalories);
+    animateNumberText(document.getElementById("cal-goal"), calorieBudget);
+    animateNumberText(document.getElementById("protein-consumed"), totalProtein, { decimals: 1 });
     document.getElementById("protein-goal").textContent = GOAL_PROTEIN;
 
     const burnedNote = document.getElementById("cal-burned-note");
@@ -495,6 +568,7 @@
     };
     log.push(entry);
     saveLog(log);
+    lastAddedLogUid = entry.uid;
     renderLog();
     renderSummary();
   }
@@ -511,6 +585,7 @@
     showUndoToast(`Removed ${removed.name}`, () => {
       log.splice(index, 0, removed);
       saveLog(log);
+      lastAddedLogUid = removed.uid;
       renderLog();
       renderSummary();
     });
@@ -554,6 +629,7 @@
     };
     workouts.push(entry);
     saveWorkouts(workouts);
+    lastAddedWorkoutUid = entry.uid;
     renderWorkouts();
     renderSummary();
   }
@@ -570,6 +646,7 @@
     showUndoToast(`Removed ${removed.name}`, () => {
       workouts.splice(index, 0, removed);
       saveWorkouts(workouts);
+      lastAddedWorkoutUid = removed.uid;
       renderWorkouts();
       renderSummary();
     });
@@ -587,21 +664,35 @@
 
   // ---- Undo toast ----
   let toastTimeoutId = null;
+  let toastHideTimeoutId = null;
   let pendingUndo = null;
 
   function showUndoToast(message, undoFn) {
     const toast = document.getElementById("toast");
     document.getElementById("toast-message").textContent = message;
-    toast.hidden = false;
     pendingUndo = undoFn;
     clearTimeout(toastTimeoutId);
+    clearTimeout(toastHideTimeoutId);
+
+    toast.hidden = false;
+    void toast.offsetWidth;
+    toast.classList.add("show");
+
     toastTimeoutId = setTimeout(hideToast, 6000);
   }
 
   function hideToast() {
-    document.getElementById("toast").hidden = true;
+    const toast = document.getElementById("toast");
+    toast.classList.remove("show");
     pendingUndo = null;
     clearTimeout(toastTimeoutId);
+    clearTimeout(toastHideTimeoutId);
+    toastHideTimeoutId = setTimeout(
+      () => {
+        toast.hidden = true;
+      },
+      prefersReducedMotion() ? 0 : 220
+    );
   }
 
   // ---- Daily reset check ----
@@ -682,6 +773,10 @@
   renderScalableFoods();
   renderAll();
   checkStreakCelebration();
+
+  document.querySelectorAll(".app > header, .app > section").forEach((el, i) => {
+    el.style.setProperty("--i", i);
+  });
 
   setInterval(checkForDayRollover, 1000);
 })();
