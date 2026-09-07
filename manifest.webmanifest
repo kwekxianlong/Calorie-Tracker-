@@ -1,6 +1,6 @@
 {
-  "name": "Daily Calorie Tracker",
-  "short_name": "Calories",
+  "name": "Fuel — Daily Calorie Tracker",
+  "short_name": "Fuel",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
