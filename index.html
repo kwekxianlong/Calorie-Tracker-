@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Calorie Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div>
+      <p class="eyebrow">Today</p>
+      <h1 id="today-date">—</h1>
+    </div>
+    <div class="reset-note">
+      <span id="reset-countdown">—</span>
+      <span class="reset-label">until reset</span>
+    </div>
+  </header>
+
+  <section class="summary-card">
+    <div class="summary-row">
+      <div class="summary-stat">
+        <p class="stat-value" id="stat-foods">0</p>
+        <p class="stat-label">Foods logged</p>
+      </div>
+      <div class="summary-stat">
+        <p class="stat-value" id="stat-calories">0</p>
+        <p class="stat-label">Calories</p>
+      </div>
+      <div class="summary-stat">
+        <p class="stat-value" id="stat-protein">0g</p>
+        <p class="stat-label">Protein</p>
+      </div>
+    </div>
+
+    <div class="progress-block">
+      <div class="progress-row">
+        <span class="progress-label">Calories</span>
+        <span class="progress-numbers"><span id="cal-consumed">0</span> / <span id="cal-goal">1700</span> kcal</span>
+      </div>
+      <div class="bar"><div class="bar-fill" id="cal-bar"></div></div>
+    </div>
+
+    <div class="progress-block">
+      <div class="progress-row">
+        <span class="progress-label">Protein</span>
+        <span class="progress-numbers"><span id="protein-consumed">0</span> / <span id="protein-goal">130</span> g</span>
+      </div>
+      <div class="bar"><div class="bar-fill" id="protein-bar"></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Fixed-Portion Foods</h2>
+    <div class="food-list" id="fixed-food-list"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Scale to Portion</h2>
+    <p class="panel-subtitle">Enter grams, then add</p>
+    <div class="food-list" id="scalable-food-list"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header-row">
+      <h2 class="panel-title">Today's Log</h2>
+      <button class="text-btn" id="clear-log-btn">Clear</button>
+    </div>
+    <div class="log-list" id="log-list">
+      <p class="empty-state" id="empty-state">No food logged yet today.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
