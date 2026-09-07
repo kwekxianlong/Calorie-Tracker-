@@ -13,27 +13,44 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: var(--panel-gray);
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--panel-gray);
   color: var(--black);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 .app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 28px 20px 60px;
+  padding: calc(28px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
+}
+
+.header > div:first-child {
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .eyebrow {
@@ -46,7 +63,7 @@ body {
 
 .header h1 {
   margin: 0;
-  font-size: 26px;
+  font-size: clamp(20px, 6vw, 26px);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -56,6 +73,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 #reset-countdown {
@@ -237,12 +255,12 @@ body {
 }
 
 .gram-input {
-  width: 58px;
+  width: 64px;
   padding: 7px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line-gray);
   background: var(--panel-gray);
-  font-size: 13px;
+  font-size: 16px;
   text-align: right;
   color: var(--black);
   font-variant-numeric: tabular-nums;
@@ -296,7 +314,7 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--line-gray);
   background: var(--panel-gray);
-  font-size: 14px;
+  font-size: 16px;
   color: var(--black);
   font-family: inherit;
 }

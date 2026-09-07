@@ -33,6 +33,17 @@ You can also just open `index.html` directly in a browser.
   open across midnight, it detects the date change and refreshes itself. A live countdown to
   the next reset is shown in the header.
 
+## Using it on iPhone
+
+The layout is edge-to-edge and sized for phone screens (tested at iPhone SE, iPhone 14, and
+iPhone 14 Pro Max widths), respects the notch/home-indicator safe areas, and inputs use a
+16px minimum font size so Safari doesn't auto-zoom when you tap them.
+
+To use it like a native app: open `index.html` in Safari on your iPhone, tap the Share icon,
+then **Add to Home Screen**. It will launch full-screen (no browser address bar) with a
+black status bar and its own icon, via the included `manifest.webmanifest` and
+`icons/apple-touch-icon.png`.
+
 ## Editing the food list
 
 Foods are defined in `app.js` in the `FIXED_FOODS` and `SCALABLE_FOODS` arrays, sourced from
