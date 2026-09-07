@@ -132,7 +132,7 @@
         </div>
       `;
       const input = row.querySelector(".gram-input");
-      row.querySelector(".add-btn").addEventListener("click", () => {
+      const addScaledFood = () => {
         const grams = parseFloat(input.value);
         if (!grams || grams <= 0) {
           input.focus();
@@ -145,6 +145,13 @@
           calories: Math.round(food.caloriesPer100 * factor),
           protein: round1(food.proteinPer100 * factor),
         });
+      };
+      row.querySelector(".add-btn").addEventListener("click", addScaledFood);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addScaledFood();
+        }
       });
       container.appendChild(row);
     });
@@ -203,17 +210,20 @@
       </div>
       <input type="text" class="custom-input log-edit-portion" value="${escapeHtml(entry.portionLabel)}" placeholder="Portion">
       <div class="log-edit-actions">
-        <button class="log-edit-cancel" type="button">Cancel</button>
-        <button class="log-edit-save" type="button">Save</button>
+        <button class="log-edit-delete" type="button">Delete</button>
+        <div class="log-edit-actions-right">
+          <button class="log-edit-cancel" type="button">Cancel</button>
+          <button class="log-edit-save" type="button">Save</button>
+        </div>
       </div>
     `;
 
-    row.querySelector(".log-edit-cancel").addEventListener("click", () => {
+    const cancelEdit = () => {
       editingUid = null;
       renderLog();
-    });
+    };
 
-    row.querySelector(".log-edit-save").addEventListener("click", () => {
+    const saveEdit = () => {
       const name = row.querySelector(".log-edit-name").value.trim();
       const calories = parseFloat(row.querySelector(".log-edit-calories").value);
       const protein = parseFloat(row.querySelector(".log-edit-protein").value);
@@ -224,6 +234,24 @@
       }
 
       updateEntry(entry.uid, { name, calories: Math.round(calories), protein: round1(protein), portionLabel });
+    };
+
+    row.querySelector(".log-edit-delete").addEventListener("click", () => {
+      removeEntry(entry.uid);
+    });
+    row.querySelector(".log-edit-cancel").addEventListener("click", cancelEdit);
+    row.querySelector(".log-edit-save").addEventListener("click", saveEdit);
+
+    row.querySelectorAll(".log-edit-name, .log-edit-calories, .log-edit-protein, .log-edit-portion").forEach((field) => {
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          saveEdit();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          cancelEdit();
+        }
+      });
     });
 
     return row;
@@ -277,10 +305,20 @@
   }
 
   function removeEntry(uid) {
-    log = log.filter((e) => e.uid !== uid);
+    const index = log.findIndex((e) => e.uid === uid);
+    if (index === -1) return;
+    const [removed] = log.splice(index, 1);
+    if (editingUid === uid) editingUid = null;
     saveLog(log);
     renderLog();
     renderSummary();
+
+    showUndoToast(`Removed ${removed.name}`, () => {
+      log.splice(index, 0, removed);
+      saveLog(log);
+      renderLog();
+      renderSummary();
+    });
   }
 
   function updateEntry(uid, changes) {
@@ -295,11 +333,39 @@
 
   function clearLog() {
     if (log.length === 0) return;
-    if (!confirm("Clear all food logged today?")) return;
+    const previous = log;
+    const count = previous.length;
     log = [];
+    editingUid = null;
     saveLog(log);
     renderLog();
     renderSummary();
+
+    showUndoToast(`Cleared ${count} food${count === 1 ? "" : "s"}`, () => {
+      log = previous;
+      saveLog(log);
+      renderLog();
+      renderSummary();
+    });
+  }
+
+  // ---- Undo toast ----
+  let toastTimeoutId = null;
+  let pendingUndo = null;
+
+  function showUndoToast(message, undoFn) {
+    const toast = document.getElementById("toast");
+    document.getElementById("toast-message").textContent = message;
+    toast.hidden = false;
+    pendingUndo = undoFn;
+    clearTimeout(toastTimeoutId);
+    toastTimeoutId = setTimeout(hideToast, 6000);
+  }
+
+  function hideToast() {
+    document.getElementById("toast").hidden = true;
+    pendingUndo = null;
+    clearTimeout(toastTimeoutId);
   }
 
   // ---- Daily reset check ----
@@ -309,6 +375,7 @@
       currentDayKey = key;
       log = loadLog(); // fresh key -> empty array
       editingUid = null;
+      hideToast();
       renderAll();
     } else {
       renderCountdown();
@@ -348,6 +415,10 @@
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
   document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
+  document.getElementById("toast-undo-btn").addEventListener("click", () => {
+    if (pendingUndo) pendingUndo();
+    hideToast();
+  });
   renderFixedFoods();
   renderScalableFoods();
   renderAll();

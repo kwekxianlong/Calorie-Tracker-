@@ -23,8 +23,12 @@ You can also just open `index.html` directly in a browser.
 - **Add Any Food**: anything not in the preset list can be logged directly — enter a name,
   calories, protein, and an optional portion label.
 - **Today's Log**: every food you add appears with its calories, protein, portion, and time
-  added, with an edit (✎) and a remove button. Editing lets you correct the name, calories,
-  protein, or portion of an already-logged item at any time; changes save immediately.
+  added, with an edit (✎) and a remove (×) button. Editing lets you correct the name,
+  calories, protein, or portion of an already-logged item at any time; press Enter to save or
+  Escape to cancel, or use the Delete button inside the edit form to remove it outright.
+- **Frictionless delete**: removing a single item or clearing the whole log happens instantly
+  — no confirmation popup — and shows a floating "Undo" toast for 6 seconds so a mis-tap is
+  never permanent.
 - **Summary**: total foods logged, total calories, and total protein are shown at the top,
   plus progress bars against the daily goals (1700 kcal / 130g protein).
 - **Daily reset**: the log is stored in `localStorage` keyed by the local calendar date

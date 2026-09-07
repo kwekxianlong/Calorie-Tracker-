@@ -440,12 +440,19 @@ body {
 
 .log-edit-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  justify-content: flex-end;
+}
+
+.log-edit-actions-right {
+  display: flex;
+  gap: 8px;
 }
 
 .log-edit-save,
-.log-edit-cancel {
+.log-edit-cancel,
+.log-edit-delete {
   padding: 8px 14px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -468,4 +475,59 @@ body {
 
 .log-edit-cancel:hover {
   background: var(--panel-gray);
+}
+
+.log-edit-delete {
+  color: var(--mid-gray);
+}
+
+.log-edit-delete:hover {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 40px);
+  padding: 13px 14px 13px 18px;
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--white);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.toast-message {
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-undo {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.toast-undo:hover {
+  text-decoration: underline;
 }
