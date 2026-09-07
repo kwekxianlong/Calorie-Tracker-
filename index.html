@@ -66,6 +66,16 @@
   </section>
 
   <section class="panel">
+    <div class="panel-header-row">
+      <h2 class="panel-title">Today's Log</h2>
+      <button class="text-btn" id="clear-log-btn">Clear</button>
+    </div>
+    <div class="log-list" id="log-list">
+      <p class="empty-state" id="empty-state">No food logged yet today.</p>
+    </div>
+  </section>
+
+  <section class="panel">
     <h2 class="panel-title">Fixed-Portion Foods</h2>
     <div class="food-list" id="fixed-food-list"></div>
   </section>
@@ -101,27 +111,6 @@
     <div class="log-list" id="workout-log-list">
       <p class="empty-state" id="workout-empty-state">No workouts logged yet today.</p>
     </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-header-row">
-      <h2 class="panel-title">Today's Log</h2>
-      <button class="text-btn" id="clear-log-btn">Clear</button>
-    </div>
-    <div class="log-list" id="log-list">
-      <p class="empty-state" id="empty-state">No food logged yet today.</p>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2 class="panel-title">Ask About Nutrition</h2>
-    <p class="panel-subtitle" id="ask-subtitle">Ask Claude a food or nutrition question — answered from its own knowledge, not a live web search.</p>
-    <form class="custom-food-form" id="ask-form">
-      <textarea id="ask-input" class="custom-input ask-textarea" rows="2" placeholder="e.g. How much protein is in 200g of salmon?" required></textarea>
-      <button type="submit" class="add-custom-btn" id="ask-submit-btn">Ask</button>
-    </form>
-    <p class="ask-status" id="ask-status" hidden></p>
-    <div class="ask-answer" id="ask-answer" hidden></div>
   </section>
 
 </div>

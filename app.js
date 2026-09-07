@@ -586,73 +586,6 @@
     nameInput.focus();
   }
 
-  // ---- Ask About Nutrition (only works when opened via the published app, not a plain static copy) ----
-  async function initAskFeature() {
-    const form = document.getElementById("ask-form");
-    const input = document.getElementById("ask-input");
-    const submitBtn = document.getElementById("ask-submit-btn");
-    const answerEl = document.getElementById("ask-answer");
-    const statusEl = document.getElementById("ask-status");
-    const subtitleEl = document.getElementById("ask-subtitle");
-
-    const disable = (message) => {
-      subtitleEl.textContent = message;
-      input.disabled = true;
-      submitBtn.disabled = true;
-    };
-
-    if (typeof window.claude === "undefined" || typeof window.claude.use !== "function") {
-      disable("Only available when opened from the published app link, not this local copy.");
-      return;
-    }
-
-    let sample;
-    try {
-      sample = await window.claude.use("sample");
-    } catch (e) {
-      sample = null;
-    }
-
-    if (!sample) {
-      disable("Ask-Claude isn't available in this view right now.");
-      return;
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const question = input.value.trim();
-      if (!question) return;
-
-      submitBtn.disabled = true;
-      statusEl.hidden = false;
-      statusEl.textContent = "Thinking…";
-      answerEl.hidden = true;
-
-      try {
-        const result = await sample(
-          `You are a concise nutrition assistant inside a personal calorie-tracking app. Answer this food or nutrition question factually and briefly, in a few plain-text sentences with no markdown formatting: ${question}`,
-          {
-            modelTier: "quick",
-            onText: ({ text }) => {
-              answerEl.hidden = false;
-              answerEl.textContent = text;
-            },
-          }
-        );
-        answerEl.hidden = false;
-        answerEl.textContent = result.text;
-        statusEl.hidden = true;
-      } catch (err) {
-        statusEl.textContent =
-          err && err.code === "not_granted"
-            ? "Permission wasn't granted for this feature."
-            : "Something went wrong asking that — try again.";
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-  }
-
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
   document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
@@ -664,7 +597,6 @@
   renderFixedFoods();
   renderScalableFoods();
   renderAll();
-  initAskFeature();
 
   setInterval(checkForDayRollover, 1000);
 })();

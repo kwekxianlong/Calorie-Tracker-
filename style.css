@@ -546,32 +546,3 @@ body {
   text-decoration: underline;
 }
 
-.ask-textarea {
-  min-height: 64px;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.4;
-}
-
-.ask-status {
-  margin: 10px 2px 0;
-  font-size: 12.5px;
-  color: var(--mid-gray);
-}
-
-.ask-answer {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--panel-gray);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--black);
-  white-space: pre-wrap;
-}
-
-.add-custom-btn:disabled,
-.custom-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
