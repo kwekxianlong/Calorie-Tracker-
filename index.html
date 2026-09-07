@@ -65,6 +65,20 @@
   </section>
 
   <section class="panel">
+    <h2 class="panel-title">Add Any Food</h2>
+    <p class="panel-subtitle">Not in the list above? Log it directly.</p>
+    <form class="custom-food-form" id="custom-food-form">
+      <input type="text" id="custom-name" class="custom-input" placeholder="Food name" required>
+      <div class="custom-food-row">
+        <input type="number" id="custom-calories" class="custom-input" placeholder="Calories" min="0" step="1" required>
+        <input type="number" id="custom-protein" class="custom-input" placeholder="Protein (g)" min="0" step="0.1" required>
+      </div>
+      <input type="text" id="custom-portion" class="custom-input" placeholder="Portion (optional, e.g. 1 bowl)">
+      <button type="submit" class="add-custom-btn">Add to log</button>
+    </form>
+  </section>
+
+  <section class="panel">
     <div class="panel-header-row">
       <h2 class="panel-title">Today's Log</h2>
       <button class="text-btn" id="clear-log-btn">Clear</button>

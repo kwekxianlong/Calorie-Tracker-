@@ -52,9 +52,16 @@
 
   let currentDayKey = todayKey();
   let log = loadLog();
+  let editingUid = null;
 
   function round1(n) {
     return Math.round(n * 10) / 10;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
   }
 
   // ---- Rendering ----
@@ -157,20 +164,69 @@
     }
 
     log.forEach((entry) => {
+      if (entry.uid === editingUid) {
+        container.appendChild(buildEditRow(entry));
+        return;
+      }
+
       const row = document.createElement("div");
       row.className = "log-item";
       row.innerHTML = `
         <div class="log-info">
-          <p class="log-name">${entry.name}</p>
-          <p class="log-meta"><span class="cal">${entry.calories} kcal</span> · ${round1(entry.protein)}g protein · ${entry.portionLabel} · ${entry.time}</p>
+          <p class="log-name">${escapeHtml(entry.name)}</p>
+          <p class="log-meta"><span class="cal">${entry.calories} kcal</span> · ${round1(entry.protein)}g protein · ${escapeHtml(entry.portionLabel)} · ${entry.time}</p>
         </div>
-        <button class="remove-btn" aria-label="Remove ${entry.name}">×</button>
+        <div class="log-item-actions">
+          <button class="edit-btn" aria-label="Edit ${escapeHtml(entry.name)}">✎</button>
+          <button class="remove-btn" aria-label="Remove ${escapeHtml(entry.name)}">×</button>
+        </div>
       `;
+      row.querySelector(".edit-btn").addEventListener("click", () => {
+        editingUid = entry.uid;
+        renderLog();
+      });
       row.querySelector(".remove-btn").addEventListener("click", () => {
         removeEntry(entry.uid);
       });
       container.appendChild(row);
     });
+  }
+
+  function buildEditRow(entry) {
+    const row = document.createElement("div");
+    row.className = "log-item-edit";
+    row.innerHTML = `
+      <input type="text" class="custom-input log-edit-name" value="${escapeHtml(entry.name)}" placeholder="Food name">
+      <div class="log-edit-row">
+        <input type="number" class="custom-input log-edit-calories" value="${entry.calories}" min="0" step="1" placeholder="Calories">
+        <input type="number" class="custom-input log-edit-protein" value="${round1(entry.protein)}" min="0" step="0.1" placeholder="Protein (g)">
+      </div>
+      <input type="text" class="custom-input log-edit-portion" value="${escapeHtml(entry.portionLabel)}" placeholder="Portion">
+      <div class="log-edit-actions">
+        <button class="log-edit-cancel" type="button">Cancel</button>
+        <button class="log-edit-save" type="button">Save</button>
+      </div>
+    `;
+
+    row.querySelector(".log-edit-cancel").addEventListener("click", () => {
+      editingUid = null;
+      renderLog();
+    });
+
+    row.querySelector(".log-edit-save").addEventListener("click", () => {
+      const name = row.querySelector(".log-edit-name").value.trim();
+      const calories = parseFloat(row.querySelector(".log-edit-calories").value);
+      const protein = parseFloat(row.querySelector(".log-edit-protein").value);
+      const portionLabel = row.querySelector(".log-edit-portion").value.trim();
+
+      if (!name || isNaN(calories) || calories < 0 || isNaN(protein) || protein < 0) {
+        return;
+      }
+
+      updateEntry(entry.uid, { name, calories: Math.round(calories), protein: round1(protein), portionLabel });
+    });
+
+    return row;
   }
 
   function renderSummary() {
@@ -227,6 +283,16 @@
     renderSummary();
   }
 
+  function updateEntry(uid, changes) {
+    const entry = log.find((e) => e.uid === uid);
+    if (!entry) return;
+    Object.assign(entry, changes);
+    saveLog(log);
+    editingUid = null;
+    renderLog();
+    renderSummary();
+  }
+
   function clearLog() {
     if (log.length === 0) return;
     if (!confirm("Clear all food logged today?")) return;
@@ -242,14 +308,46 @@
     if (key !== currentDayKey) {
       currentDayKey = key;
       log = loadLog(); // fresh key -> empty array
+      editingUid = null;
       renderAll();
     } else {
       renderCountdown();
     }
   }
 
+  function handleCustomFoodSubmit(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("custom-name");
+    const caloriesInput = document.getElementById("custom-calories");
+    const proteinInput = document.getElementById("custom-protein");
+    const portionInput = document.getElementById("custom-portion");
+
+    const name = nameInput.value.trim();
+    const calories = parseFloat(caloriesInput.value);
+    const protein = parseFloat(proteinInput.value);
+    const portionLabel = portionInput.value.trim() || "1 serving";
+
+    if (!name || isNaN(calories) || calories < 0 || isNaN(protein) || protein < 0) {
+      return;
+    }
+
+    addEntry({
+      name,
+      portionLabel,
+      calories: Math.round(calories),
+      protein: round1(protein),
+    });
+
+    nameInput.value = "";
+    caloriesInput.value = "";
+    proteinInput.value = "";
+    portionInput.value = "";
+    nameInput.focus();
+  }
+
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
+  document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
   renderFixedFoods();
   renderScalableFoods();
   renderAll();

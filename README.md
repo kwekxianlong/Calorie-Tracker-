@@ -20,8 +20,11 @@ You can also just open `index.html` directly in a browser.
 - **Food list**: built from the food reference sheet — fixed-portion items (e.g. air fryer
   grilled chicken, boiled egg, Greek yogurt) get a single tap **+** button; per-100g items
   (banana, turkey bacon, blueberries, potato) let you enter grams before adding.
+- **Add Any Food**: anything not in the preset list can be logged directly — enter a name,
+  calories, protein, and an optional portion label.
 - **Today's Log**: every food you add appears with its calories, protein, portion, and time
-  added, with a remove button.
+  added, with an edit (✎) and a remove button. Editing lets you correct the name, calories,
+  protein, or portion of an already-logged item at any time; changes save immediately.
 - **Summary**: total foods logged, total calories, and total protein are shown at the top,
   plus progress bars against the daily goals (1700 kcal / 130g protein).
 - **Daily reset**: the log is stored in `localStorage` keyed by the local calendar date

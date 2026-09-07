@@ -277,6 +277,54 @@ body {
   transform: scale(0.92);
 }
 
+.custom-food-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+
+.custom-food-row {
+  display: flex;
+  gap: 10px;
+}
+
+.custom-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-gray);
+  background: var(--panel-gray);
+  font-size: 14px;
+  color: var(--black);
+  font-family: inherit;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: var(--dark-gray);
+}
+
+.custom-input::placeholder {
+  color: var(--mid-gray);
+}
+
+.add-custom-btn {
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--black);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-custom-btn:hover {
+  background: var(--dark-gray);
+}
+
 .log-list {
   padding-bottom: 6px;
 }
@@ -325,14 +373,21 @@ body {
   font-weight: 600;
 }
 
-.remove-btn {
+.log-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.remove-btn,
+.edit-btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   border: 1px solid var(--line-gray);
   background: var(--white);
   color: var(--mid-gray);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
@@ -341,8 +396,58 @@ body {
   justify-content: center;
 }
 
-.remove-btn:hover {
+.remove-btn:hover,
+.edit-btn:hover {
   background: var(--black);
   color: var(--white);
   border-color: var(--black);
+}
+
+.log-item-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-gray);
+}
+
+.log-item-edit:last-child {
+  border-bottom: none;
+}
+
+.log-edit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.log-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.log-edit-save,
+.log-edit-cancel {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-gray);
+  background: var(--white);
+  color: var(--black);
+}
+
+.log-edit-save {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+.log-edit-save:hover {
+  background: var(--dark-gray);
+}
+
+.log-edit-cancel:hover {
+  background: var(--panel-gray);
 }
