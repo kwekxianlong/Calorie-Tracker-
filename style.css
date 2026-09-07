@@ -98,6 +98,91 @@ body {
   margin-bottom: 20px;
 }
 
+.streak-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #2c2c2e;
+}
+
+.streak-value-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.streak-value {
+  display: inline-block;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+
+.streak-value.zero {
+  color: #6e6e73;
+}
+
+.streak-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a1a1a6;
+}
+
+@keyframes streak-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.4);
+  }
+  62% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.streak-value.celebrate {
+  animation: streak-pop 0.6s ease;
+}
+
+@keyframes streak-particle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0);
+    opacity: 0;
+  }
+}
+
+.streak-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: var(--white);
+  pointer-events: none;
+  animation: streak-particle 0.7s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-value.celebrate {
+    animation: none;
+  }
+  .streak-particle {
+    animation: none;
+    display: none;
+  }
+}
+
 .summary-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

@@ -25,21 +25,35 @@
   ];
 
   // ---- Date / storage key helpers ----
-  function todayKey() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
+  function dateKeyFor(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   }
 
-  function storageKey(kind) {
-    return `calorie-tracker-${kind}-${todayKey()}`;
+  function todayKey() {
+    return dateKeyFor(new Date());
   }
 
-  function loadEntries(kind) {
+  function parseDateKey(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function shiftDateKey(key, deltaDays) {
+    const date = parseDateKey(key);
+    date.setDate(date.getDate() + deltaDays);
+    return dateKeyFor(date);
+  }
+
+  function storageKey(kind, dateKey) {
+    return `calorie-tracker-${kind}-${dateKey || todayKey()}`;
+  }
+
+  function loadEntries(kind, dateKey) {
     try {
-      const raw = localStorage.getItem(storageKey(kind));
+      const raw = localStorage.getItem(storageKey(kind, dateKey));
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
       return [];
@@ -357,6 +371,74 @@
     return row;
   }
 
+  // ---- Streak ----
+  function getDaySummary(dateKey) {
+    const entries = loadEntries("log", dateKey);
+    if (entries.length === 0) {
+      return { tracked: false, success: false };
+    }
+    const dayWorkouts = loadEntries("workouts", dateKey);
+    const consumed = entries.reduce((sum, e) => sum + e.calories, 0);
+    const burned = dayWorkouts.reduce((sum, w) => sum + w.calories, 0);
+    const budget = GOAL_CALORIES + burned;
+    return { tracked: true, success: consumed <= budget };
+  }
+
+  function computeStreak() {
+    let streak = 0;
+    let cursor = shiftDateKey(todayKey(), -1);
+    while (true) {
+      const { tracked, success } = getDaySummary(cursor);
+      if (!tracked || !success) break;
+      streak += 1;
+      cursor = shiftDateKey(cursor, -1);
+    }
+    return streak;
+  }
+
+  function renderStreak() {
+    const streak = computeStreak();
+    const valueEl = document.getElementById("streak-value");
+    valueEl.textContent = streak;
+    valueEl.classList.toggle("zero", streak === 0);
+  }
+
+  function celebrateStreak() {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const valueEl = document.getElementById("streak-value");
+    const wrap = document.getElementById("streak-value-wrap");
+    if (!valueEl || !wrap) return;
+
+    valueEl.classList.remove("celebrate");
+    void valueEl.offsetWidth;
+    valueEl.classList.add("celebrate");
+
+    const particleCount = 10;
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement("span");
+      particle.className = "streak-particle";
+      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
+      const distance = 22 + Math.random() * 14;
+      particle.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+      particle.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+      particle.addEventListener("animationend", () => particle.remove());
+      wrap.appendChild(particle);
+    }
+  }
+
+  function checkStreakCelebration() {
+    const yesterday = shiftDateKey(todayKey(), -1);
+    const { tracked, success } = getDaySummary(yesterday);
+    const celebratedFor = localStorage.getItem("calorie-tracker-streak-celebrated");
+
+    if (tracked && success && celebratedFor !== yesterday) {
+      localStorage.setItem("calorie-tracker-streak-celebrated", yesterday);
+      celebrateStreak();
+    }
+  }
+
   function renderSummary() {
     const totalCalories = log.reduce((sum, e) => sum + e.calories, 0);
     const totalProtein = round1(log.reduce((sum, e) => sum + e.protein, 0));
@@ -398,6 +480,7 @@
     renderLog();
     renderWorkouts();
     renderSummary();
+    renderStreak();
   }
 
   // ---- Mutations ----
@@ -532,6 +615,7 @@
       editingWorkoutUid = null;
       hideToast();
       renderAll();
+      checkStreakCelebration();
     } else {
       renderCountdown();
     }
@@ -597,6 +681,7 @@
   renderFixedFoods();
   renderScalableFoods();
   renderAll();
+  checkStreakCelebration();
 
   setInterval(checkForDayRollover, 1000);
 })();

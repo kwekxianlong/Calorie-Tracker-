@@ -17,6 +17,13 @@ You can also just open `index.html` directly in a browser.
 
 ## How it works
 
+- **Day streak**: counts consecutive *completed* days where you stayed within that day's
+  calorie budget (goal + any workouts). It's computed from your actual stored daily logs, not a
+  separate counter, so it can't drift out of sync — a day only counts if you logged something
+  and finished under budget; a day with no log at all, or a day over budget, breaks the streak.
+  The first time you open the app after a streak day completes, the number pops with a brief
+  particle-burst animation (skipped automatically if your device has "Reduce Motion" on) — it
+  only plays once per completed day, not on every visit.
 - **Summary card**: total foods logged, total calories, total protein, and total calories
   burned, plus progress bars against the daily goals (1700 kcal + any workouts / 130g protein).
 - **Today's Log** sits directly under the summary card, above the food catalog — every food you
