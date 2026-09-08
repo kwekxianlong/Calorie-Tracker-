@@ -83,12 +83,34 @@
   <section class="panel">
     <h2 class="panel-title">Fixed-Portion Foods</h2>
     <div class="food-list" id="fixed-food-list"></div>
+
+    <p class="panel-subtitle catalog-add-label">Add a new food to this list</p>
+    <form class="custom-food-form" id="fixed-food-form">
+      <input type="text" id="fixed-food-name" class="custom-input" placeholder="Food name" required>
+      <div class="custom-food-row">
+        <input type="number" id="fixed-food-calories" class="custom-input" placeholder="Calories" min="0" step="1" required>
+        <input type="number" id="fixed-food-protein" class="custom-input" placeholder="Protein (g)" min="0" step="0.1" required>
+      </div>
+      <input type="text" id="fixed-food-portion" class="custom-input" placeholder="Portion (e.g. 270g, 1 large)" required>
+      <button type="submit" class="add-custom-btn">Save to list</button>
+    </form>
   </section>
 
   <section class="panel">
     <h2 class="panel-title">Scale to Portion</h2>
     <p class="panel-subtitle">Enter grams, then add</p>
     <div class="food-list" id="scalable-food-list"></div>
+
+    <p class="panel-subtitle catalog-add-label">Add a new food to this list</p>
+    <form class="custom-food-form" id="scalable-food-form">
+      <input type="text" id="scalable-food-name" class="custom-input" placeholder="Food name" required>
+      <div class="custom-food-row">
+        <input type="number" id="scalable-food-calories" class="custom-input" placeholder="Calories / 100g" min="0" step="1" required>
+        <input type="number" id="scalable-food-protein" class="custom-input" placeholder="Protein / 100g" min="0" step="0.1" required>
+      </div>
+      <input type="number" id="scalable-food-default-grams" class="custom-input" placeholder="Default grams (optional)" min="1" step="1">
+      <button type="submit" class="add-custom-btn">Save to list</button>
+    </form>
   </section>
 
   <section class="panel">
@@ -115,6 +137,20 @@
     </form>
     <div class="log-list" id="workout-log-list">
       <p class="empty-state" id="workout-empty-state">No workouts logged yet today.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">Grocery List</h2>
+    <p class="panel-subtitle">Tap an ingredient to add it to your list</p>
+    <div class="grocery-chip-grid" id="grocery-chip-grid"></div>
+
+    <div class="panel-header-row">
+      <h2 class="panel-title">To Buy</h2>
+      <button class="text-btn" id="clear-grocery-btn">Clear</button>
+    </div>
+    <div class="log-list" id="grocery-list">
+      <p class="empty-state" id="grocery-empty-state">Nothing added yet — tap an ingredient above.</p>
     </div>
   </section>
 

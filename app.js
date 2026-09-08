@@ -68,13 +68,47 @@
     localStorage.setItem(storageKey("workouts"), JSON.stringify(entries));
   }
 
+  // ---- Custom catalog items (persist across days, not date-scoped) ----
+  function loadCatalog(kind) {
+    try {
+      const raw = localStorage.getItem(`calorie-tracker-custom-${kind}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCatalog(kind, list) {
+    localStorage.setItem(`calorie-tracker-custom-${kind}`, JSON.stringify(list));
+  }
+
+  // ---- Grocery list (persists across days, not date-scoped) ----
+  function loadGroceryList() {
+    try {
+      const raw = localStorage.getItem("calorie-tracker-grocery-list");
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveGroceryList() {
+    localStorage.setItem("calorie-tracker-grocery-list", JSON.stringify(groceryList));
+  }
+
   let currentDayKey = todayKey();
   let log = loadEntries("log");
   let workouts = loadEntries("workouts");
+  let customFixedFoods = loadCatalog("fixed-foods");
+  let customScalableFoods = loadCatalog("scalable-foods");
+  let groceryList = loadGroceryList();
   let editingUid = null;
   let editingWorkoutUid = null;
   let lastAddedLogUid = null;
   let lastAddedWorkoutUid = null;
+  let lastAddedFixedUid = null;
+  let lastAddedScalableUid = null;
+  let lastAddedGroceryName = null;
 
   function round1(n) {
     return Math.round(n * 10) / 10;
@@ -180,16 +214,18 @@
   function renderFixedFoods() {
     const container = document.getElementById("fixed-food-list");
     container.innerHTML = "";
-    FIXED_FOODS.forEach((food) => {
+    FIXED_FOODS.concat(customFixedFoods).forEach((food) => {
       const row = document.createElement("div");
       row.className = "food-item";
+      if (food.custom && food.uid === lastAddedFixedUid) row.classList.add("item-enter");
       row.innerHTML = `
         <div class="food-info">
-          <p class="food-name">${food.name}</p>
-          <p class="food-meta"><span class="cal">${food.calories} kcal</span> · ${round1(food.protein)}g protein · ${food.portionLabel}</p>
+          <p class="food-name">${escapeHtml(food.name)}</p>
+          <p class="food-meta"><span class="cal">${food.calories} kcal</span> · ${round1(food.protein)}g protein · ${escapeHtml(food.portionLabel)}</p>
         </div>
         <div class="food-controls">
-          <button class="add-btn" aria-label="Add ${food.name}">+</button>
+          ${food.custom ? `<button class="remove-btn" aria-label="Remove ${escapeHtml(food.name)} from list">×</button>` : ""}
+          <button class="add-btn" aria-label="Add ${escapeHtml(food.name)}">+</button>
         </div>
       `;
       row.querySelector(".add-btn").addEventListener("click", () => {
@@ -200,24 +236,32 @@
           protein: food.protein,
         });
       });
+      if (food.custom) {
+        row.querySelector(".remove-btn").addEventListener("click", () => {
+          animateRemoval(row, () => removeCustomFixedFood(food.uid));
+        });
+      }
       container.appendChild(row);
     });
+    lastAddedFixedUid = null;
   }
 
   function renderScalableFoods() {
     const container = document.getElementById("scalable-food-list");
     container.innerHTML = "";
-    SCALABLE_FOODS.forEach((food) => {
+    SCALABLE_FOODS.concat(customScalableFoods).forEach((food) => {
       const row = document.createElement("div");
       row.className = "food-item";
+      if (food.custom && food.uid === lastAddedScalableUid) row.classList.add("item-enter");
       row.innerHTML = `
         <div class="food-info">
-          <p class="food-name">${food.name}</p>
+          <p class="food-name">${escapeHtml(food.name)}</p>
           <p class="food-meta">${food.caloriesPer100} kcal · ${food.proteinPer100}g protein / 100g</p>
         </div>
         <div class="food-controls">
-          <input type="number" class="gram-input" min="1" step="1" value="${food.defaultGrams}" aria-label="Grams of ${food.name}">
-          <button class="add-btn" aria-label="Add ${food.name}">+</button>
+          ${food.custom ? `<button class="remove-btn" aria-label="Remove ${escapeHtml(food.name)} from list">×</button>` : ""}
+          <input type="number" class="gram-input" min="1" step="1" value="${food.defaultGrams}" aria-label="Grams of ${escapeHtml(food.name)}">
+          <button class="add-btn" aria-label="Add ${escapeHtml(food.name)}">+</button>
         </div>
       `;
       const input = row.querySelector(".gram-input");
@@ -242,7 +286,184 @@
           addScaledFood();
         }
       });
+      if (food.custom) {
+        row.querySelector(".remove-btn").addEventListener("click", () => {
+          animateRemoval(row, () => removeCustomScalableFood(food.uid));
+        });
+      }
       container.appendChild(row);
+    });
+    lastAddedScalableUid = null;
+  }
+
+  function addCustomFixedFood(base) {
+    const food = {
+      uid: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: base.name,
+      portionLabel: base.portionLabel,
+      calories: base.calories,
+      protein: base.protein,
+      custom: true,
+    };
+    customFixedFoods.push(food);
+    saveCatalog("fixed-foods", customFixedFoods);
+    lastAddedFixedUid = food.uid;
+    renderFixedFoods();
+    renderGroceryChips();
+  }
+
+  function removeCustomFixedFood(uid) {
+    const index = customFixedFoods.findIndex((f) => f.uid === uid);
+    if (index === -1) return;
+    const [removed] = customFixedFoods.splice(index, 1);
+    saveCatalog("fixed-foods", customFixedFoods);
+    renderFixedFoods();
+    renderGroceryChips();
+
+    showUndoToast(`Removed ${removed.name} from list`, () => {
+      customFixedFoods.splice(index, 0, removed);
+      saveCatalog("fixed-foods", customFixedFoods);
+      lastAddedFixedUid = removed.uid;
+      renderFixedFoods();
+      renderGroceryChips();
+    });
+  }
+
+  function addCustomScalableFood(base) {
+    const food = {
+      uid: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: base.name,
+      caloriesPer100: base.caloriesPer100,
+      proteinPer100: base.proteinPer100,
+      defaultGrams: base.defaultGrams,
+      custom: true,
+    };
+    customScalableFoods.push(food);
+    saveCatalog("scalable-foods", customScalableFoods);
+    lastAddedScalableUid = food.uid;
+    renderScalableFoods();
+    renderGroceryChips();
+  }
+
+  function removeCustomScalableFood(uid) {
+    const index = customScalableFoods.findIndex((f) => f.uid === uid);
+    if (index === -1) return;
+    const [removed] = customScalableFoods.splice(index, 1);
+    saveCatalog("scalable-foods", customScalableFoods);
+    renderScalableFoods();
+    renderGroceryChips();
+
+    showUndoToast(`Removed ${removed.name} from list`, () => {
+      customScalableFoods.splice(index, 0, removed);
+      saveCatalog("scalable-foods", customScalableFoods);
+      lastAddedScalableUid = removed.uid;
+      renderScalableFoods();
+      renderGroceryChips();
+    });
+  }
+
+  // ---- Grocery list ----
+  function getAllIngredientNames() {
+    const names = [
+      ...FIXED_FOODS.map((f) => f.name),
+      ...customFixedFoods.map((f) => f.name),
+      ...SCALABLE_FOODS.map((f) => f.name),
+      ...customScalableFoods.map((f) => f.name),
+    ];
+    return Array.from(new Set(names));
+  }
+
+  function renderGroceryChips() {
+    const chipGrid = document.getElementById("grocery-chip-grid");
+    chipGrid.innerHTML = "";
+    getAllIngredientNames().forEach((name) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "grocery-chip";
+      if (groceryList.includes(name)) chip.classList.add("selected");
+      chip.textContent = name;
+      chip.addEventListener("click", () => toggleGroceryItem(name));
+      chipGrid.appendChild(chip);
+    });
+  }
+
+  function renderGroceryToBuy() {
+    const container = document.getElementById("grocery-list");
+    container.innerHTML = "";
+
+    if (groceryList.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty-state";
+      empty.id = "grocery-empty-state";
+      empty.textContent = "Nothing added yet — tap an ingredient above.";
+      container.appendChild(empty);
+      lastAddedGroceryName = null;
+      return;
+    }
+
+    groceryList.forEach((name) => {
+      const row = document.createElement("div");
+      row.className = "log-item";
+      row.dataset.name = name;
+      if (name === lastAddedGroceryName) row.classList.add("item-enter");
+      row.innerHTML = `
+        <div class="log-info">
+          <p class="log-name">${escapeHtml(name)}</p>
+        </div>
+        <div class="log-item-actions">
+          <button class="remove-btn" aria-label="Remove ${escapeHtml(name)}">×</button>
+        </div>
+      `;
+      row.querySelector(".remove-btn").addEventListener("click", () => {
+        animateRemoval(row, () => removeGroceryItem(name));
+      });
+      container.appendChild(row);
+    });
+    lastAddedGroceryName = null;
+  }
+
+  function renderGrocery() {
+    renderGroceryChips();
+    renderGroceryToBuy();
+  }
+
+  function toggleGroceryItem(name) {
+    if (groceryList.includes(name)) {
+      const row = document.querySelector(`#grocery-list .log-item[data-name="${CSS.escape(name)}"]`);
+      if (row) {
+        animateRemoval(row, () => removeGroceryItem(name));
+        renderGroceryChips();
+      } else {
+        removeGroceryItem(name);
+      }
+    } else {
+      groceryList.push(name);
+      lastAddedGroceryName = name;
+      saveGroceryList();
+      renderGrocery();
+    }
+  }
+
+  function removeGroceryItem(name) {
+    const index = groceryList.indexOf(name);
+    if (index === -1) return;
+    groceryList.splice(index, 1);
+    saveGroceryList();
+    renderGrocery();
+  }
+
+  function clearGroceryList() {
+    if (groceryList.length === 0) return;
+    const previous = groceryList;
+    const count = previous.length;
+    groceryList = [];
+    saveGroceryList();
+    renderGrocery();
+
+    showUndoToast(`Cleared ${count} grocery item${count === 1 ? "" : "s"}`, () => {
+      groceryList = previous;
+      saveGroceryList();
+      renderGrocery();
     });
   }
 
@@ -761,16 +982,75 @@
     nameInput.focus();
   }
 
+  function handleAddFixedFoodSubmit(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("fixed-food-name");
+    const caloriesInput = document.getElementById("fixed-food-calories");
+    const proteinInput = document.getElementById("fixed-food-protein");
+    const portionInput = document.getElementById("fixed-food-portion");
+
+    const name = nameInput.value.trim();
+    const calories = parseFloat(caloriesInput.value);
+    const protein = parseFloat(proteinInput.value);
+    const portionLabel = portionInput.value.trim();
+
+    if (!name || isNaN(calories) || calories < 0 || isNaN(protein) || protein < 0 || !portionLabel) {
+      return;
+    }
+
+    addCustomFixedFood({ name, calories: Math.round(calories), protein: round1(protein), portionLabel });
+
+    nameInput.value = "";
+    caloriesInput.value = "";
+    proteinInput.value = "";
+    portionInput.value = "";
+    nameInput.focus();
+  }
+
+  function handleAddScalableFoodSubmit(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("scalable-food-name");
+    const caloriesInput = document.getElementById("scalable-food-calories");
+    const proteinInput = document.getElementById("scalable-food-protein");
+    const gramsInput = document.getElementById("scalable-food-default-grams");
+
+    const name = nameInput.value.trim();
+    const caloriesPer100 = parseFloat(caloriesInput.value);
+    const proteinPer100 = parseFloat(proteinInput.value);
+    const defaultGrams = parseFloat(gramsInput.value);
+
+    if (!name || isNaN(caloriesPer100) || caloriesPer100 < 0 || isNaN(proteinPer100) || proteinPer100 < 0) {
+      return;
+    }
+
+    addCustomScalableFood({
+      name,
+      caloriesPer100: round1(caloriesPer100),
+      proteinPer100: round1(proteinPer100),
+      defaultGrams: defaultGrams > 0 ? Math.round(defaultGrams) : 100,
+    });
+
+    nameInput.value = "";
+    caloriesInput.value = "";
+    proteinInput.value = "";
+    gramsInput.value = "";
+    nameInput.focus();
+  }
+
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
   document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
   document.getElementById("workout-form").addEventListener("submit", handleWorkoutFormSubmit);
+  document.getElementById("fixed-food-form").addEventListener("submit", handleAddFixedFoodSubmit);
+  document.getElementById("scalable-food-form").addEventListener("submit", handleAddScalableFoodSubmit);
+  document.getElementById("clear-grocery-btn").addEventListener("click", clearGroceryList);
   document.getElementById("toast-undo-btn").addEventListener("click", () => {
     if (pendingUndo) pendingUndo();
     hideToast();
   });
   renderFixedFoods();
   renderScalableFoods();
+  renderGrocery();
   renderAll();
   checkStreakCelebration();
 

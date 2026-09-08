@@ -36,9 +36,14 @@ You can also just open `index.html` directly in a browser.
   never permanent.
 - **Food list**: built from the food reference sheet — fixed-portion items (e.g. air fryer
   grilled chicken, boiled egg, Greek yogurt) get a single tap **+** button; per-100g items
-  (banana, turkey bacon, blueberries, potato) let you enter grams before adding.
-- **Add Any Food**: anything not in the preset list can be logged directly — enter a name,
-  calories, protein, and an optional portion label.
+  (banana, turkey bacon, blueberries, potato) let you enter grams before adding. Each catalog
+  panel has an "Add a new food to this list" form at the bottom so you can grow either list
+  permanently — those additions get their own remove (×) button (the built-in reference foods
+  don't have one); everything's stored in `localStorage`, separate from and unaffected by the
+  daily reset.
+- **Add Any Food**: anything not in the preset list can be logged directly, just for today —
+  enter a name, calories, protein, and an optional portion label. Use the catalog forms above
+  instead if you want a food to stick around as a reusable option.
 - **Workouts**: log calories burned from exercise (activity name + calories) the same way as
   food — add, edit, or delete, with the same instant/undo behavior. Calories burned are added
   to the day's calorie budget (`1700 base + burned`), so the Calories progress bar reflects
@@ -49,6 +54,12 @@ You can also just open `index.html` directly in a browser.
   midnight local time the key rolls over, so both start empty for the new day — no manual
   reset needed. If the app is left open across midnight, it detects the date change and
   refreshes itself. A live countdown to the next reset is shown in the header.
+
+- **Grocery List** sits at the very bottom: a tap-to-toggle grid of every ingredient name in
+  your catalog (built-in and custom, deduplicated). Tapping one adds it to a "To Buy" list
+  below — tap again, or use the × on the "To Buy" row, to take it back off. It's not tied to
+  any day; it just holds whatever you've tapped until you clear it (with the same undo safety
+  net as everything else). Automatically stays in sync when you add or remove a catalog food.
 
 There's no "Ask a nutrition question" box in this copy — that needs a live connection to
 Claude, which a static page can't have, so it only exists in the separately-published
