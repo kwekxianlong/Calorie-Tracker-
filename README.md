@@ -57,9 +57,11 @@ You can also just open `index.html` directly in a browser.
 
 - **Grocery List** sits at the very bottom: a tap-to-toggle grid of every ingredient name in
   your catalog (built-in and custom, deduplicated). Tapping one adds it to a "To Buy" list
-  below — tap again, or use the × on the "To Buy" row, to take it back off. It's not tied to
-  any day; it just holds whatever you've tapped until you clear it (with the same undo safety
-  net as everything else). Automatically stays in sync when you add or remove a catalog food.
+  below — tap again, or use the × on the "To Buy" row, to take it back off. Below the chip grid,
+  a plain text field lets you add anything not in the catalog at all (paper towels, olive oil,
+  whatever) straight onto the same list. It's not tied to any day; it just holds whatever you've
+  added until you clear it (with the same undo safety net as everything else). Automatically
+  stays in sync when you add or remove a catalog food.
 
 There's no "Ask a nutrition question" box in this copy — that needs a live connection to
 Claude, which a static page can't have, so it only exists in the separately-published

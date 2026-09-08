@@ -427,6 +427,14 @@
     renderGroceryToBuy();
   }
 
+  function addGroceryItem(name) {
+    if (groceryList.includes(name)) return;
+    groceryList.push(name);
+    lastAddedGroceryName = name;
+    saveGroceryList();
+    renderGrocery();
+  }
+
   function toggleGroceryItem(name) {
     if (groceryList.includes(name)) {
       const row = document.querySelector(`#grocery-list .log-item[data-name="${CSS.escape(name)}"]`);
@@ -437,10 +445,7 @@
         removeGroceryItem(name);
       }
     } else {
-      groceryList.push(name);
-      lastAddedGroceryName = name;
-      saveGroceryList();
-      renderGrocery();
+      addGroceryItem(name);
     }
   }
 
@@ -1037,12 +1042,24 @@
     nameInput.focus();
   }
 
+  function handleGroceryCustomSubmit(event) {
+    event.preventDefault();
+    const input = document.getElementById("grocery-custom-name");
+    const name = input.value.trim();
+    if (!name) return;
+
+    addGroceryItem(name);
+    input.value = "";
+    input.focus();
+  }
+
   // ---- Init ----
   document.getElementById("clear-log-btn").addEventListener("click", clearLog);
   document.getElementById("custom-food-form").addEventListener("submit", handleCustomFoodSubmit);
   document.getElementById("workout-form").addEventListener("submit", handleWorkoutFormSubmit);
   document.getElementById("fixed-food-form").addEventListener("submit", handleAddFixedFoodSubmit);
   document.getElementById("scalable-food-form").addEventListener("submit", handleAddScalableFoodSubmit);
+  document.getElementById("grocery-custom-form").addEventListener("submit", handleGroceryCustomSubmit);
   document.getElementById("clear-grocery-btn").addEventListener("click", clearGroceryList);
   document.getElementById("toast-undo-btn").addEventListener("click", () => {
     if (pendingUndo) pendingUndo();
