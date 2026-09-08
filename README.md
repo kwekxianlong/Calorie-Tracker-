@@ -56,10 +56,10 @@ You can also just open `index.html` directly in a browser.
   refreshes itself. A live countdown to the next reset is shown in the header.
 
 - **Grocery List** sits at the very bottom: a tap-to-toggle grid of every ingredient name in
-  your catalog (built-in and custom, deduplicated). Tapping one adds it to a "To Buy" list
-  below — tap again, or use the × on the "To Buy" row, to take it back off. Below the chip grid,
+  your catalog (built-in and custom, deduplicated). Tapping one adds it to your **Cart** below —
+  tap again, or use the × on its row in the cart, to take it back off. Below the chip grid,
   a plain text field lets you add anything not in the catalog at all (paper towels, olive oil,
-  whatever) straight onto the same list. It's not tied to any day; it just holds whatever you've
+  whatever) straight into the same cart. It's not tied to any day; it just holds whatever you've
   added until you clear it (with the same undo safety net as everything else). Automatically
   stays in sync when you add or remove a catalog food.
 

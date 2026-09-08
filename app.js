@@ -395,7 +395,7 @@
       const empty = document.createElement("p");
       empty.className = "empty-state";
       empty.id = "grocery-empty-state";
-      empty.textContent = "Nothing added yet — tap an ingredient above.";
+      empty.textContent = "Your cart is empty — tap an ingredient above.";
       container.appendChild(empty);
       lastAddedGroceryName = null;
       return;
@@ -465,7 +465,7 @@
     saveGroceryList();
     renderGrocery();
 
-    showUndoToast(`Cleared ${count} grocery item${count === 1 ? "" : "s"}`, () => {
+    showUndoToast(`Cleared ${count} item${count === 1 ? "" : "s"} from cart`, () => {
       groceryList = previous;
       saveGroceryList();
       renderGrocery();
